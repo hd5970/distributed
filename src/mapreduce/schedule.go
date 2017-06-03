@@ -52,9 +52,25 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	var finishedMap = make(map[int]int)
 	var taskChan = make(chan int, ntasks)
 	var resultChan = make(chan taskRet, ntasks)
-	var done = make(chan bool)
-	wait := sync.WaitGroup{}
-	wait.Add(2)
+	var taskDone = make(chan bool)
+	var stopRegister = make(chan bool)
+	var workerChan = make(chan string, 100)
+
+	waitGroup := sync.WaitGroup{}
+	waitGroup.Add(3)
+	go func() {
+	Done:
+		for {
+			select {
+			case address := <-registerChan:
+				workerChan <- address
+			case <-stopRegister:
+				break Done
+			}
+		}
+		waitGroup.Done()
+	}()
+
 	go func() {
 	Done:
 		for {
@@ -65,38 +81,41 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 				} else {
 					finishedMap[r.taskNum] = UNASSIGNED
 				}
-			case <-time.After(time.Second * 1):
-				var b = true // if task done
+			case <-time.After(time.Millisecond * 100):
+				var b = true // if task taskDone
 				for i := 0; i < ntasks; i++ {
 					if finishedMap[i] != FINISHED {
 						b = false
-						if finishedMap[i] != ASSIGNED {
+						if finishedMap[i] == UNASSIGNED {
+							fmt.Println("Gonna emit task to channel")
 							taskChan <- i
 							finishedMap[i] = ASSIGNED
 						}
 					}
 				}
 				if b {
-					done <- true
+					fmt.Println("Stop control channel")
+					taskDone <- true
+					stopRegister <- true
+					fmt.Println("Waiting for someone")
 					break Done
+
 				}
 			}
-			//fmt.Println("Fuck doing here")
 		}
-		wait.Done()
+		fmt.Println("Gonna exit control there")
+		waitGroup.Done()
 
 	}()
 
 	// emit task forever
 	go func() {
-
 	Done:
 		for {
-			fmt.Println("Gonna start go routine")
 			select {
-			case address := <-registerChan:
-				fmt.Println("Get worker here")
-				taskNum := <-taskChan
+			case taskNum := <-taskChan:
+				fmt.Println("Get worker here maybe stuck here")
+				address := <-workerChan
 				fmt.Println("Get task num here")
 
 				go func() {
@@ -109,15 +128,18 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 
 					resultChan <- taskRet{taskNum,
 							      call(address, "Worker.DoTask", taskArgs, nil)}
+					workerChan <- address
+
 				}()
-				fmt.Println("Fuck here")
-			case <-done:
+			case <-time.After(time.Second * 1):
+				fmt.Println("Waiting for some thing")
+			case <-taskDone:
 				break Done
 			}
 
 		}
-		wait.Done()
+		waitGroup.Done()
 	}()
-	wait.Wait()
-	fmt.Printf("Schedule: %v phase done\n", phase)
+	waitGroup.Wait()
+	fmt.Printf("Schedule: %v phase taskDone\n", phase)
 }
