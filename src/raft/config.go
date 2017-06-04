@@ -206,7 +206,7 @@ func (cfg *config) cleanup() {
 
 // attach server i to the net.
 func (cfg *config) connect(i int) {
-	// fmt.Printf("connect(%d)\n", i)
+	 fmt.Printf("connect(%d)\n", i)
 
 	cfg.connected[i] = true
 
@@ -229,7 +229,7 @@ func (cfg *config) connect(i int) {
 
 // detach server i from the net.
 func (cfg *config) disconnect(i int) {
-	// fmt.Printf("disconnect(%d)\n", i)
+	 fmt.Printf("disconnect(%d)\n", i)
 
 	cfg.connected[i] = false
 
@@ -287,6 +287,7 @@ func (cfg *config) checkOneLeader() int {
 		}
 
 		if len(leaders) != 0 {
+			fmt.Printf("Now the leader is :%d\n", leaders[lastTermWithLeader][0])
 			return leaders[lastTermWithLeader][0]
 		}
 	}
@@ -316,7 +317,7 @@ func (cfg *config) checkNoLeader() {
 		if cfg.connected[i] {
 			_, is_leader := cfg.rafts[i].GetState()
 			if is_leader {
-				cfg.t.Fatalf("expected no leader, but %v claims to be leader", i)
+				cfg.t.Fatalf("expected no leader, but %v claims to be leader term:%d", i, cfg.rafts[i].currentTerm)
 			}
 		}
 	}
