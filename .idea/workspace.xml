@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf3f979e-57ca-4531-9efa-a927341343f6" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/raft/raft.go" afterPath="$PROJECT_DIR$/src/raft/raft.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/raft/test_test.go" afterPath="$PROJECT_DIR$/src/raft/test_test.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -20,8 +17,8 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="630">
-              <caret line="41" column="33" lean-forward="false" selection-start-line="41" selection-start-column="33" selection-end-line="41" selection-end-column="33" />
+            <state relative-caret-position="475">
+              <caret line="360" column="10" lean-forward="false" selection-start-line="360" selection-start-column="10" selection-end-line="360" selection-end-column="10" />
               <folding>
                 <element signature="e#591#668#0" expanded="true" />
                 <element signature="e#1876#1878#0" expanded="false" />
@@ -33,12 +30,12 @@
                 <element signature="e#3417#3419#0" expanded="false" />
                 <element signature="n#!!block;n#readPersist#0" expanded="false" />
                 <element signature="e#3506#3529#0" expanded="false" />
-                <element signature="e#5236#5361#0" expanded="false" />
-                <element signature="e#5387#5424#0" expanded="false" />
+                <element signature="e#5046#5171#0" expanded="false" />
+                <element signature="e#5197#5234#0" expanded="false" />
                 <element signature="n#!!block;n#sendAppendEntries#0" expanded="false" />
                 <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
                 <element signature="n#!!block;n#getLastLogTerm#0" expanded="false" />
-                <element signature="e#10888#10890#0" expanded="false" />
+                <element signature="e#10630#10632#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -684,8 +681,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
-          <caret line="41" column="33" lean-forward="false" selection-start-line="41" selection-start-column="33" selection-end-line="41" selection-end-column="33" />
+        <state relative-caret-position="475">
+          <caret line="360" column="10" lean-forward="false" selection-start-line="360" selection-start-column="10" selection-end-line="360" selection-end-column="10" />
           <folding>
             <element signature="e#591#668#0" expanded="true" />
             <element signature="e#1876#1878#0" expanded="false" />
@@ -697,12 +694,12 @@
             <element signature="e#3417#3419#0" expanded="false" />
             <element signature="n#!!block;n#readPersist#0" expanded="false" />
             <element signature="e#3506#3529#0" expanded="false" />
-            <element signature="e#5236#5361#0" expanded="false" />
-            <element signature="e#5387#5424#0" expanded="false" />
+            <element signature="e#5046#5171#0" expanded="false" />
+            <element signature="e#5197#5234#0" expanded="false" />
             <element signature="n#!!block;n#sendAppendEntries#0" expanded="false" />
             <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
             <element signature="n#!!block;n#getLastLogTerm#0" expanded="false" />
-            <element signature="e#10888#10890#0" expanded="false" />
+            <element signature="e#10630#10632#0" expanded="false" />
           </folding>
         </state>
       </provider>

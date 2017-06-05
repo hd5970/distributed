@@ -39,7 +39,7 @@ const (
 const (
 	NotVoted            = -1
 	HeartBeatCycle      = 110 // heart beat duration in milliseconds
-	ElectionTimeoutBase = 300
+	ElectionTimeoutBase = 250
 )
 
 //
@@ -163,14 +163,16 @@ type RequestVoteReply struct {
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	reply.Term = rf.currentTerm
 	var reason string
+	defer func() {
+		fmt.Printf("Recv vote from %d me %d vote:%t reason:%s\n",
+			args.CandidateId, rf.me, reply.VoteGranted, reason)
+	}()
 	if rf.shouldAvoidElection() || args.Term < rf.currentTerm {
 		if args.Term < rf.currentTerm {
-			reason = "candidate term lower than me"
+			reason = "Candidate term lower than me"
 		} else {
 			reason = "Should not election"
 		}
-		fmt.Printf("Recv vote from %d me %d vote:%t reason:%s\n",
-			args.CandidateId, rf.me, reply.VoteGranted, reason)
 		return
 	}
 	rf.mu.Lock()
@@ -185,13 +187,10 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 			rf.votedFor = args.CandidateId
 			return
 		} else {
-			fmt.Printf("Recv vote from %d me %d vote:%t reason:%s\n",
-				args.CandidateId, rf.me, reply.VoteGranted, "index lower than me")
+			reason = "index lower than me"
 		}
 	}
 	reason = fmt.Sprintf("Voted for is not null voted for:%d args term:%d prev term: %d", rf.votedFor, args.Term, reply.Term)
-	fmt.Printf("Recv vote from %d me %d vote:%t reason:%s\n",
-		args.CandidateId, rf.me, reply.VoteGranted, reason)
 }
 
 func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
@@ -354,11 +353,11 @@ func (rf *Raft) launchElection() {
 			}
 		}
 	}()
-	fmt.Println("All fork me ", rf.me)
 	wait.Wait()
-	fmt.Printf("All returns me:%d ballot:%d\n ", rf.me, ballotCount)
 	done <- true
 	<-electionDone
+	close(done)
+	close(electionDone)
 	if rf.role == Candidate {
 		fmt.Printf("Lose the election me:%d term:%d ballot:%d\n", rf.me, rf.currentTerm, ballotCount)
 		time.Sleep(rf.randomElectionTimeout())
