@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf3f979e-57ca-4531-9efa-a927341343f6" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/raft/raft.go" afterPath="$PROJECT_DIR$/src/raft/raft.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -17,26 +18,39 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="475">
-              <caret line="360" column="10" lean-forward="false" selection-start-line="360" selection-start-column="10" selection-end-line="360" selection-end-column="10" />
+            <state relative-caret-position="293">
+              <caret line="335" column="64" lean-forward="false" selection-start-line="335" selection-start-column="64" selection-end-line="335" selection-end-column="64" />
               <folding>
-                <element signature="e#591#668#0" expanded="true" />
-                <element signature="e#1876#1878#0" expanded="false" />
-                <element signature="n#!!block;n#Start#0" expanded="false" />
-                <element signature="e#2637#2639#0" expanded="false" />
+                <element signature="e#591#653#0" expanded="true" />
+                <element signature="e#2924#2926#0" expanded="false" />
                 <element signature="n#!!block;n#Kill#0" expanded="false" />
-                <element signature="e#3002#3004#0" expanded="false" />
+                <element signature="e#3289#3291#0" expanded="false" />
                 <element signature="n#!!block;n#persist#0" expanded="false" />
-                <element signature="e#3417#3419#0" expanded="false" />
+                <element signature="e#3704#3706#0" expanded="false" />
                 <element signature="n#!!block;n#readPersist#0" expanded="false" />
-                <element signature="e#3506#3529#0" expanded="false" />
-                <element signature="e#5046#5171#0" expanded="false" />
-                <element signature="e#5197#5234#0" expanded="false" />
+                <element signature="e#3793#3816#0" expanded="false" />
+                <element signature="e#4035#4117#0" expanded="false" />
+                <element signature="e#4141#4186#0" expanded="false" />
+                <element signature="n#!!block;n#sendRequestVote#0" expanded="false" />
+                <element signature="e#5496#5533#0" expanded="false" />
                 <element signature="n#!!block;n#sendAppendEntries#0" expanded="false" />
+                <element signature="n#!!block;n#needLaunchElection#0" expanded="false" />
+                <element signature="n#!!block;n#randomElectionTimeout#0" expanded="false" />
+                <element signature="n#!!block;n#shouldAvoidElection#0" expanded="false" />
+                <element signature="n#!!block;n#updateLastHeartBeat#0" expanded="false" />
                 <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
-                <element signature="n#!!block;n#getLastLogTerm#0" expanded="false" />
-                <element signature="e#10630#10632#0" expanded="false" />
+                <element signature="e#12951#12953#0" expanded="false" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="sleep.go" pinned="false" current-in-tab="false">
+        <entry file="file:///usr/local/Cellar/go/1.8.1/libexec/src/time/sleep.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="280">
+              <caret line="150" column="28" lean-forward="false" selection-start-line="150" selection-start-column="28" selection-end-line="150" selection-end-column="28" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -82,6 +96,12 @@
       <find>Get lock</find>
       <find>Vote</find>
       <find>printf</find>
+      <find>Recv</find>
+      <find>recv</find>
+      <find>me</find>
+      <find>my role</find>
+      <find>lead</find>
+      <find>lead()</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -352,13 +372,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/mapreduce/common_rpc.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="286">
-          <caret line="16" column="8" lean-forward="false" selection-start-line="16" selection-start-column="8" selection-end-line="16" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/local/Cellar/go/1.8.1/libexec/src/net/rpc/client.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6732">
@@ -494,13 +507,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///usr/local/Cellar/go/1.8.1/libexec/src/builtin/builtin.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="261">
-          <caret line="91" column="5" lean-forward="false" selection-start-line="91" selection-start-column="5" selection-end-line="91" selection-end-column="5" />
         </state>
       </provider>
     </entry>
@@ -679,27 +685,46 @@
         </state>
       </provider>
     </entry>
+    <entry file="file:///usr/local/Cellar/go/1.8.1/libexec/src/builtin/builtin.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="603">
+          <caret line="94" column="73" lean-forward="true" selection-start-line="94" selection-start-column="73" selection-end-line="94" selection-end-column="73" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/go/1.8.1/libexec/src/time/sleep.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="280">
+          <caret line="150" column="28" lean-forward="false" selection-start-line="150" selection-start-column="28" selection-end-line="150" selection-end-column="28" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="360" column="10" lean-forward="false" selection-start-line="360" selection-start-column="10" selection-end-line="360" selection-end-column="10" />
+        <state relative-caret-position="293">
+          <caret line="335" column="64" lean-forward="false" selection-start-line="335" selection-start-column="64" selection-end-line="335" selection-end-column="64" />
           <folding>
-            <element signature="e#591#668#0" expanded="true" />
-            <element signature="e#1876#1878#0" expanded="false" />
-            <element signature="n#!!block;n#Start#0" expanded="false" />
-            <element signature="e#2637#2639#0" expanded="false" />
+            <element signature="e#591#653#0" expanded="true" />
+            <element signature="e#2924#2926#0" expanded="false" />
             <element signature="n#!!block;n#Kill#0" expanded="false" />
-            <element signature="e#3002#3004#0" expanded="false" />
+            <element signature="e#3289#3291#0" expanded="false" />
             <element signature="n#!!block;n#persist#0" expanded="false" />
-            <element signature="e#3417#3419#0" expanded="false" />
+            <element signature="e#3704#3706#0" expanded="false" />
             <element signature="n#!!block;n#readPersist#0" expanded="false" />
-            <element signature="e#3506#3529#0" expanded="false" />
-            <element signature="e#5046#5171#0" expanded="false" />
-            <element signature="e#5197#5234#0" expanded="false" />
+            <element signature="e#3793#3816#0" expanded="false" />
+            <element signature="e#4035#4117#0" expanded="false" />
+            <element signature="e#4141#4186#0" expanded="false" />
+            <element signature="n#!!block;n#sendRequestVote#0" expanded="false" />
+            <element signature="e#5496#5533#0" expanded="false" />
             <element signature="n#!!block;n#sendAppendEntries#0" expanded="false" />
+            <element signature="n#!!block;n#needLaunchElection#0" expanded="false" />
+            <element signature="n#!!block;n#randomElectionTimeout#0" expanded="false" />
+            <element signature="n#!!block;n#shouldAvoidElection#0" expanded="false" />
+            <element signature="n#!!block;n#updateLastHeartBeat#0" expanded="false" />
             <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
-            <element signature="n#!!block;n#getLastLogTerm#0" expanded="false" />
-            <element signature="e#10630#10632#0" expanded="false" />
+            <element signature="e#12951#12953#0" expanded="false" />
           </folding>
         </state>
       </provider>
