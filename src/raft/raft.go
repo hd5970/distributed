@@ -23,6 +23,7 @@ import (
 	"time"
 	"math/rand"
 	"fmt"
+	"runtime"
 )
 
 // import "bytes"
@@ -38,7 +39,7 @@ const (
 const (
 	NotVoted            = -1
 	HeartBeatCycle      = 150 // heart beat duration in milliseconds
-	ElectionTimeoutBase = 250
+	ElectionTimeoutBase = 180
 	RecvChanBufferSize  = 200
 	//NullInt             = -1
 )
@@ -170,14 +171,17 @@ type RequestVoteReply struct {
 }
 
 //handler
-func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
-	reply.Term = rf.currentTerm
+func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 	var reason string
+	rf.mu.Lock()
 	defer func() {
 		rf.debug(args.CandidateId, rf.me, "recv vote from %d vote:%t reason:%s",
 			args.CandidateId, reply.VoteGranted, reason)
+		rf.mu.Unlock()
 	}()
-	if rf.shouldAvoidElection() || args.Term < rf.currentTerm {
+	reply.Term = rf.currentTerm
+	//if rf.shouldAvoidElection() || args.Term < rf.currentTerm {
+	if args.Term < rf.currentTerm {
 		if args.Term < rf.currentTerm {
 			reason = "Candidate term lower than me"
 		} else {
@@ -185,8 +189,6 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		}
 		return
 	}
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
 	rf.updateLastHeartBeat()
 	rf.updateTermToGreater(args.Term)
 	reply.Term = rf.currentTerm
@@ -203,7 +205,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	reason = fmt.Sprintf("Voted for is not null voted for:%d args term:%d prev term: %d", rf.votedFor, args.Term, reply.Term)
 }
 
-func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
+func (rf *Raft) sendRequestVote(server int, args RequestVoteArgs, reply *RequestVoteReply) bool {
 	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
 	return ok
 }
@@ -223,18 +225,15 @@ type AppendEntriesReply struct {
 }
 
 // handler
-func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
+func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply) {
 	rf.mu.Lock()
-	reply.Term = rf.currentTerm
-	rf.debug(args.LeaderId, rf.me, "recv append entry from remote:%d  args term:%d my term:%d", args.LeaderId,
-		args.Term, rf.currentTerm)
 	defer rf.mu.Unlock()
+	reply.Term = rf.currentTerm
 	if args.Term < rf.currentTerm {
-
-		reply.Term = rf.currentTerm
+		rf.debug(args.LeaderId, rf.me, "append entry lower than me args term:%d my term:%d",
+			args.Term, rf.currentTerm)
 		return
 	} else if args.Term >= rf.currentTerm {
-
 		rf.role = Follower
 		rf.updateTermToGreater(args.Term)
 	}
@@ -277,7 +276,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 }
 
-func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
+func (rf *Raft) sendAppendEntries(server int, args AppendEntriesArgs, reply *AppendEntriesReply) bool {
 	ok := rf.peers[server].Call("Raft.AppendEntries", args, reply)
 	return ok
 }
@@ -298,10 +297,10 @@ func (rf *Raft) launchElection() {
 		return
 	}
 
-	rf.currentTerm = rf.currentTerm + 1
+	rf.updateTermToGreater(rf.currentTerm + 1)
 	rf.debug(rf.me, rf.me, "term has been upgrade to:%d", rf.currentTerm)
 	rf.votedFor = rf.me
-	args := &RequestVoteArgs{
+	args := RequestVoteArgs{
 		Term:         rf.currentTerm,
 		CandidateId:  rf.me,
 		LastLogIndex: rf.getLastLogIndex(),
@@ -363,15 +362,20 @@ func (rf *Raft) lead() {
 	rf.matchIndex = make([]int, len(rf.peers))
 	for i := range rf.matchIndex {
 		rf.matchIndex[i] = -1
+		rf.nextIndex[i] = rf.commitIndex + 1
 	}
 	rf.appendEntriesToFollowers()
 	for {
 		if rf.role == Leader {
 			select {
 			case <-time.After(time.Millisecond * HeartBeatCycle):
-				rf.appendEntriesToFollowers()
+				if rf.role == Leader {
+					rf.appendEntriesToFollowers()
+				}
 			case <-rf.recvLogEventChan:
-				rf.appendEntriesToFollowers()
+				if rf.role == Leader {
+					rf.appendEntriesToFollowers()
+				}
 			}
 
 		} else {
@@ -386,72 +390,68 @@ func (rf *Raft) appendEntriesToFollowers() {
 			continue
 		}
 		go func(i int) {
-			rf.mu.Lock()
-			if rf.matchIndex[i] != rf.nextIndex[i]-1 && rf.matchIndex[i] != 0 {
+			if rf.matchIndex[i] != rf.nextIndex[i]-1 && rf.matchIndex[i] != -1 {
 				// 已经发送过了,但是对方没有返回成功, 所以上一次请求应该还在重试,这次miss
 				rf.debug(rf.me, rf.me, "fail to send log, prev not returns remote:%d "+
 					"matchIndex:%d nextIndex:%d leader lastIndex:%d", i, rf.matchIndex[i],
 					rf.nextIndex[i], rf.getLastLogIndex())
 				return
 			}
-			rf.mu.Unlock()
 			rf.mu.Lock()
-			//if rf.nextIndex[i] == rf.getLastLogIndex() {
-			//	return
-			//}
-
-			if rf.role != Leader {
-				return
-			}
-			args := &AppendEntriesArgs{
+			args := AppendEntriesArgs{
 				Term:         rf.currentTerm,
 				LeaderId:     rf.me,
 				PrevLogIndex: rf.matchIndex[i],
 				LeaderCommit: rf.commitIndex,
 				Entries:      rf.getRelativeLogEntries(rf.nextIndex[i]),
 				PrevLogTerm:  rf.getRelativeLog(rf.matchIndex[i]).Term}
-			rf.nextIndex[i] = len(rf.log)
+			rf.nextIndex[i] = rf.nextIndex[i] + len(args.Entries)
 			rf.mu.Unlock()
-			rf.debug(rf.me, rf.me, "append entry arg args term:%d remote:%d current term:%d ",
-				args.Term, i, rf.currentTerm)
+			//rf.debug(rf.me, rf.me, "append entry arg args term:%d remote:%d current term:%d ",
+			//	args.Term, i, rf.currentTerm)
 			reply := &AppendEntriesReply{}
-			ret := rf.sendAppendEntries(i, args, reply)
-			if ret {
-				if reply.Term > rf.currentTerm {
-					rf.debug(rf.me, rf.me,
-						"found greater term from append log remote:%d, "+
-							"current term:%d reply term:%d", i, rf.currentTerm, reply.Term)
-					rf.mu.Lock()
-					rf.role = Follower
-					rf.updateTermToGreater(reply.Term)
-					rf.mu.Unlock()
-					return
-				}
-				if reply.Success == true {
-					rf.debug(rf.me, rf.me, "successfully send log to remote:%d term:%d reply.Term:%d ",
-						i, rf.currentTerm, reply.Term)
-					//rf.mu.Lock()
-					if len(args.Entries) > 0 {
-						rf.matchIndex[i] = args.Entries[len(args.Entries)-1].Index
-						rf.nextIndex[i] = rf.matchIndex[i] + 1
-					} else if rf.matchIndex[i] == -1 {
-						rf.matchIndex[i] = 0
+			if rf.role == Leader {
+				ret := rf.sendAppendEntries(i, args, reply)
+				if ret {
+					if rf.role != Leader {
+						return
 					}
+					if reply.Term > rf.currentTerm {
+						//rf.debug(rf.me, rf.me,
+						//	"found greater term from append log remote:%d, "+
+						//		"current term:%d reply term:%d", i, rf.currentTerm, reply.Term)
+						rf.mu.Lock()
+						rf.role = Follower
+						rf.updateTermToGreater(reply.Term)
+						rf.mu.Unlock()
+						return
+					}
+					if reply.Success == true {
+						//rf.debug(rf.me, rf.me, "successfully send log to remote:%d term:%d reply.Term:%d ",
+						//	i, rf.currentTerm, reply.Term)
+						//rf.mu.Lock()
+						if len(args.Entries) > 0 {
+							rf.matchIndex[i] = args.Entries[len(args.Entries)-1].Index
+							rf.nextIndex[i] = rf.matchIndex[i] + 1
+						} else if rf.matchIndex[i] == -1 {
+							rf.matchIndex[i] = 0
+						}
 
-					//rf.mu.Unlock()
+						//rf.mu.Unlock()
+					} else {
+						// gonna retry with lower index
+						//rf.debug(rf.me, rf.me, "append log return false remote:%d "+
+						//	"gonna minus next index:%d", i, rf.nextIndex[i])
+						//rf.mu.Lock()
+						rf.nextIndex[i] = rf.nextIndex[i] - 1
+						//rf.mu.Unlock()
+						//goto Retry
+					}
 				} else {
-					// gonna retry with lower index
-					rf.debug(rf.me, rf.me, "append log return false remote:%d "+
-						"gonna minus next index:%d", i, rf.nextIndex[i])
-					//rf.mu.Lock()
-					rf.nextIndex[i] = rf.nextIndex[i] - 1
-					//rf.mu.Unlock()
+					// 远端没有返回结果 rpc失败
+					//rf.debug(rf.me, rf.me, "append log rpc false, remote:%d", i)
 					//goto Retry
 				}
-			} else {
-				// 远端没有返回结果 rpc失败
-				rf.debug(rf.me, rf.me, "append log rpc false, remote:%d", i)
-				//goto Retry
 			}
 
 		}(i)
@@ -467,6 +467,9 @@ func (rf *Raft) getRelativeLog(index int) LogEntry {
 }
 
 func (rf *Raft) getRelativeLogEntries(from int) []LogEntry {
+	if len(rf.log) == 0 {
+		return []LogEntry{}
+	}
 	return rf.log[from:]
 }
 
@@ -506,8 +509,10 @@ func (rf *Raft) updateTermToGreater(term int) {
 	} else if term < rf.currentTerm {
 		panic("fuck")
 	}
+	rf.debug(rf.me, rf.me, "current term :%d has been set to:%d", rf.currentTerm, term)
 	rf.currentTerm = term
 	rf.votedFor = NotVoted
+
 }
 
 //
@@ -523,6 +528,7 @@ func (rf *Raft) updateTermToGreater(term int) {
 //
 func Make(peers []*labrpc.ClientEnd, me int,
 	persister *Persister, applyCh chan ApplyMsg) *Raft {
+	runtime.GOMAXPROCS(8)
 	rf := &Raft{}
 	rf.peers = peers
 	rf.persister = persister
@@ -532,6 +538,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.lastHeartBeatUnix = time.Now().UnixNano()
 	rf.recvLogEventChan = make(chan bool, RecvChanBufferSize)
 	rf.log = []LogEntry{}
+	rf.commitIndex = 0
 	go func() {
 		for {
 			if rf.role == Follower {
@@ -552,6 +559,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 }
 
 func (rf *Raft) debug(sender int, me int, pattern string, args ...interface{}) {
-	prefix := fmt.Sprintf("Sender: %d Me:%d Role:%d TIME:%d ", sender, me, rf.role, time.Now().UnixNano())
-	fmt.Println(prefix + fmt.Sprintf(pattern, args...))
+	prefix := fmt.Sprintf("Sender: %d Me:%d Role:%d TERM:%d TIME:%d ", sender, me, rf.role, rf.currentTerm, time.Now().UnixNano()/int64(time.Millisecond))
+	println(prefix + fmt.Sprintf(pattern, args...))
 }
