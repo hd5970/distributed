@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf3f979e-57ca-4531-9efa-a927341343f6" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/libraries/Go_SDK.xml" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/raft/raft.go" afterPath="$PROJECT_DIR$/src/raft/raft.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,15 +17,13 @@
       <file leaf-file-name="raft.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="316">
-              <caret line="407" column="16" lean-forward="false" selection-start-line="407" selection-start-column="16" selection-end-line="407" selection-end-column="16" />
+            <state relative-caret-position="321">
+              <caret line="274" column="16" lean-forward="false" selection-start-line="274" selection-start-column="16" selection-end-line="274" selection-end-column="16" />
               <folding>
-                <element signature="e#591#686#0" expanded="true" />
+                <element signature="e#591#660#0" expanded="true" />
                 <element signature="n#!!block;n#getRelativeLog#0" expanded="false" />
                 <element signature="n#!!block;n#getRelativeLogEntries#0" expanded="false" />
-                <element signature="n#!!block;n#shouldAvoidElection#0" expanded="false" />
-                <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
-                <element signature="e#12875#12877#0" expanded="false" />
+                <element signature="e#13133#13135#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -77,7 +74,7 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="y" value="22" />
-    <option name="width" value="1667" />
+    <option name="width" value="1839" />
     <option name="height" value="1058" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -245,10 +242,10 @@
     <option name="remove_strategy" value="false" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1667" height="1058" extended-state="0" />
+    <frame x="0" y="22" width="1839" height="1058" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19436112" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1761827" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32962587" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -285,7 +282,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="2" />
+      <option name="time" value="5" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -615,15 +612,13 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/raft/raft.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="407" column="16" lean-forward="false" selection-start-line="407" selection-start-column="16" selection-end-line="407" selection-end-column="16" />
+        <state relative-caret-position="321">
+          <caret line="274" column="16" lean-forward="false" selection-start-line="274" selection-start-column="16" selection-end-line="274" selection-end-column="16" />
           <folding>
-            <element signature="e#591#686#0" expanded="true" />
+            <element signature="e#591#660#0" expanded="true" />
             <element signature="n#!!block;n#getRelativeLog#0" expanded="false" />
             <element signature="n#!!block;n#getRelativeLogEntries#0" expanded="false" />
-            <element signature="n#!!block;n#shouldAvoidElection#0" expanded="false" />
-            <element signature="n#!!block;n#getLastLogIndex#0" expanded="false" />
-            <element signature="e#12875#12877#0" expanded="false" />
+            <element signature="e#13133#13135#0" expanded="false" />
           </folding>
         </state>
       </provider>
