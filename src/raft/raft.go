@@ -278,10 +278,14 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		reply.Term = rf.currentTerm
 		return
 	}
-	if args.Term >= rf.currentTerm {
+	if args.Term > rf.currentTerm {
 		rf.debug(args.LeaderId, "Append log leader term greater than me current term:%d args term:%d",
 			rf.currentTerm, args.Term)
 		rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+	} else {
+		if rf.role == Candidate {
+			rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+		}
 	}
 	reply.Term = rf.currentTerm
 	rf.heartbeatChan <- true
