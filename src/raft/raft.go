@@ -108,6 +108,7 @@ type Raft struct {
 	commitIndex     int
 	lastApplied     int
 	ifPrevRpcReturn []bool
+	everLeader      bool // indicates that i am the leader prev time
 
 	// leader should know
 	nextIndex  []int
@@ -116,6 +117,7 @@ type Raft struct {
 	recvLogEventChan chan bool
 	heartbeatChan    chan bool
 	changeRoleChan   chan updateRoleOrTerm
+	roleChangedChan  chan bool
 }
 
 //
@@ -256,6 +258,7 @@ func (rf *Raft) RequestVote(args RequestVoteArgs, reply *RequestVoteReply) {
 	}
 	if args.Term > rf.currentTerm {
 		rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+		time.Sleep(time.Millisecond * 20)
 		rf.debug(args.CandidateId, "Found request vote term greater than me, term:%d", args.Term)
 	}
 	reply.Term = rf.currentTerm
@@ -282,9 +285,11 @@ func (rf *Raft) AppendEntries(args AppendEntriesArgs, reply *AppendEntriesReply)
 		rf.debug(args.LeaderId, "Append log leader term greater than me current term:%d args term:%d",
 			rf.currentTerm, args.Term)
 		rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+		time.Sleep(time.Millisecond * 20)
 	} else {
 		if rf.role == Candidate {
 			rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+			time.Sleep(time.Millisecond * 20)
 		}
 	}
 	reply.Term = rf.currentTerm
@@ -338,6 +343,7 @@ func (rf *Raft) startElection() {
 		LastLogTerm:  rf.getLastLogTerm()}
 	rf.mu.Unlock()
 	rf.changeRoleChan <- updateRoleOrTerm{term: rf.currentTerm + 1, role: Candidate}
+	time.Sleep(time.Millisecond * 20)
 	rf.votedFor = rf.me
 	rf.debug(rf.me, "launch a election term:%d ", rf.currentTerm)
 	var ballotCount int = 1
@@ -362,6 +368,7 @@ func (rf *Raft) startElection() {
 			}
 			if reply.Term > rf.currentTerm {
 				rf.changeRoleChan <- updateRoleOrTerm{term: args.Term, role: Follower}
+				time.Sleep(time.Millisecond * 20)
 				return
 			}
 			if reply.VoteGranted {
@@ -416,16 +423,10 @@ func (rf *Raft) broadcastLogEntries() {
 				Entries:      rf.getRelativeLogEntries(rf.nextIndex[i]),
 				PrevLogTerm:  rf.getRelativeLog(rf.matchIndex[i]).Term}
 			rf.mu.Unlock()
-			//rf.debug(rf.me, rf.me, "append entry arg args term:%d remote:%d current term:%d ",
-			//	args.Term, i, rf.currentTerm)
 			reply := &AppendEntriesReply{}
 			if rf.role != Leader || rf.currentTerm != args.Term {
 				return
 			}
-			//if rf.ifPrevRpcReturn[i] == false {
-			//	//rf.debug(rf.me, "Pre rpc note return")
-			//	return
-			//}
 			rf.debug(rf.me, "Gonna send append entries to remote:%d current term:%d", i, rf.currentTerm)
 			ret := rf.sendAppendEntries(i, args, reply)
 			rf.debug(rf.me, "Append entries to remote:%d rpc: %t current term:%d ,reply.term:%d success:%t",
@@ -436,27 +437,17 @@ func (rf *Raft) broadcastLogEntries() {
 						"found greater term from append log remote:%d, "+
 							"current term:%d reply term:%d", i, rf.currentTerm, reply.Term)
 					rf.changeRoleChan <- updateRoleOrTerm{role: Leader, term: reply.Term}
-					//time.Sleep(time.Millisecond * 20)
+					time.Sleep(time.Millisecond * 20)
 					return
 				}
 				if rf.role != Leader {
 					return
 				}
 				if reply.Success {
-					//rf.debug(rf.me, rf.me, "successfully send log to remote:%d term:%d reply.Term:%d ",
-					//	i, rf.currentTerm, reply.Term)
-					//rf.mu.Lock()
 					rf.nextIndex[i] += len(args.Entries)
 					rf.matchIndex[i] = rf.nextIndex[i] - 1
-					//rf.mu.Unlock()
 				} else {
-					// gonna retry with lower index
-					//rf.debug(rf.me, rf.me, "append log return false remote:%d "+
-					//	"gonna minus next index:%d", i, rf.nextIndex[i])
-					//rf.mu.Lock()
 					rf.nextIndex[i] -= 1
-					//rf.mu.Unlock()
-					//goto Retry
 				}
 			}
 		}(i)
@@ -475,7 +466,20 @@ func (rf *Raft) loop() {
 		} else if rf.role == Candidate {
 			rf.startElection()
 		} else if rf.role == Leader {
-			rf.lead()
+			if rf.everLeader {
+				rf.lead()
+			} else {
+				rf.nextIndex = make([]int, rf.memberCount)
+				rf.matchIndex = make([]int, rf.memberCount)
+				rf.ifPrevRpcReturn = make([]bool, rf.memberCount)
+				for i := range rf.matchIndex {
+					rf.nextIndex[i] = rf.commitIndex + 1
+					rf.ifPrevRpcReturn[i] = true
+					rf.matchIndex[i] = rf.commitIndex
+				}
+				rf.everLeader = true
+				rf.broadcastLogEntries()
+			}
 		}
 	}
 }
@@ -483,27 +487,19 @@ func (rf *Raft) loop() {
 func (rf *Raft) updateRoleOrTerm() {
 	for {
 		pack := <-rf.changeRoleChan
-		rf.debug(rf.me,
-			"Change role pack term:%d current term:%d pack role:%d current role:%d",
-			pack.term, rf.currentTerm, pack.role, rf.role)
+		//rf.debug(rf.me,
+		//	"Change role pack term:%d current term:%d pack role:%d current role:%d",
+		//	pack.term, rf.currentTerm, pack.role, rf.role)
 		if pack.term < rf.currentTerm {
-			rf.debug(rf.me,
-				"Change role term lower than me, pack term:%d current term:%d pack role:%d current role:%d",
-				pack.term, rf.currentTerm, pack.role, rf.role)
+			//rf.debug(rf.me,
+			//	"Change role term lower than me, pack term:%d current term:%d pack role:%d current role:%d",
+			//	pack.term, rf.currentTerm, pack.role, rf.role)
 			continue
 		}
-		rf.role = pack.role
-		if rf.role == Leader {
-			rf.nextIndex = make([]int, rf.memberCount)
-			rf.matchIndex = make([]int, rf.memberCount)
-			rf.ifPrevRpcReturn = make([]bool, rf.memberCount)
-			for i := range rf.matchIndex {
-				rf.nextIndex[i] = rf.commitIndex + 1
-				rf.ifPrevRpcReturn[i] = true
-				rf.matchIndex[i] = rf.commitIndex
-			}
-			rf.broadcastLogEntries()
+		if rf.role != Leader && pack.role == Leader {
+			rf.everLeader = false
 		}
+		rf.role = pack.role
 		if pack.term > rf.currentTerm {
 			rf.currentTerm = pack.term
 			rf.votedFor = NotVoted
